@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"encoding/base64"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/utils"
 	"regexp"
 	"strconv"
+	"time"
 	"xian-tao/models"
 )
 
@@ -88,23 +90,96 @@ func (c *UserController) HandleRed(){
 
 
 }
-// 显示登录页面
-func (c *UserController) ShowLogin(){
-	c.TplName = "login.html"
-}
 // 激活用户
 func (c *UserController) ActiveUser(){
 	// 获取数据
 	id, err := c.GetInt("id")
+
+	// 校验数据
 	if err != nil {
 		c.Data["errMsg"] = "要激活的用户不存在"
 		c.TplName = "register.html"
 		return
 	}
-
+	// 处理数据
+	o := orm.NewOrm()
+	var user models.User
+	user.Id = id
+	err = o.Read(&user)
+	if err != nil {
+		c.Data["errMsg"] = "要激活的用户不存在"
+		c.TplName = "register.html"
+		return
+	}
+	user.Active = true
+	o.Update(&user)
+	// 返回视图
+	c.Redirect("/login", 302)
+}
+// 显示登录页面
+func (c *UserController) ShowLogin(){
+	c.TplName = "login.html"
+}
+// 处理登录数据
+func (c *UserController) HandleLogin(){
+	// 获取数据
+	userName := c.GetString("username")
+	password := c.GetString("pwd")
 	// 校验数据
+	if userName == "" || password == ""{
+		c.Data["errMsg"] = "用户名或密码不能为空"
+		c.TplName = "login.html"
+		return
+	}
 
 	// 处理数据
+	o := orm.NewOrm()
+	var user models.User
+	user.Name = userName
+	err := o.Read(&user, "Name")
+	if err != nil {
+		c.Data["errMsg"] = "用户名或密码错误"
+		c.TplName = "login.html"
+		return
+	}
+	if user.Password != password {
+		c.Data["errMsg"] = "用户名或密码错误"
+		c.TplName = "login.html"
+		return
+	}
+	if user.Active != true {
+		c.Data["errMsg"] = "用户名未激活，请先前往邮箱激活"
+		c.TplName = "login.html"
+		return
+	}
+	// 记住用户名处理
+	rememberMe := c.GetString("remember_me")
+	if rememberMe == "on" {
+		// base64加密
+		tempUserName := base64.StdEncoding.EncodeToString([]byte(userName))
+		c.Ctx.SetCookie("userName", tempUserName, time.Second * 3600 * 24 * 3)
+	} else {
+		c.Ctx.SetCookie("userName", userName, -1)
+	}
+
+
 
 	// 返回视图
+	c.Redirect("/", 302)
+}
+// 显示主页
+func (c *UserController) ShowIndex(){
+	userName := c.Ctx.GetCookie("userName")
+	// base64解密
+	tempUserName, _ := base64.StdEncoding.DecodeString(userName)
+	if string(tempUserName) == "" {
+		// 没有记住用户名
+		c.Data["userName"] = ""
+		c.Data["checked"] = ""
+	}else{
+		c.Data["userName"] = string(tempUserName)
+		c.Data["checked"] = "checked"
+	}
+	// 返回视图
+	c.TplName = "index.html"
 }
