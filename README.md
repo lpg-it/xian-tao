@@ -1,6 +1,6 @@
 # 鲜淘驿站
 
-基于B2C的商城项目，我命名为鲜淘驿站，Logo已授权。
+基于B2C的商城项目，命名为鲜淘驿站，Logo已授权。
 
 技术栈：golang + beego + MySQL + Redis + FastDFS + nginx
 
