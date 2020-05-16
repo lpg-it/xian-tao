@@ -13,7 +13,7 @@ type User struct {
 	Password string `orm:"size(20)"`  // 密码
 	Email string `orm:"size(50)"`  // 邮箱
 	Active bool `orm:"default(false)"`  // 是否激活，默认未激活
-	Power int `orm:"default(0)"`  // 权限设置
+	Power int `orm:"default(0)"`  // 权限设置，0表示普通用户，1表示管理员
 	Address []*Address `orm:"reverse(many)"`
 	OrderInfo []*OrderInfo `orm:"reverse(many)"`
 }
@@ -135,7 +135,7 @@ func init(){
 	orm.RegisterModel(new(User), new(Address), new(Goods), new(GoodsType), new(GoodsImage), new(GoodsSKU), new(IndexGoodsBanner), new(IndexTypeGoodsBanner), new(IndexPromotionBanner), new(OrderGoods), new(OrderInfo))
 
 	// 创建表
-	orm.RunSyncdb("default", true, true)
+	orm.RunSyncdb("default", false, true)
 }
 
 
