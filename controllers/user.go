@@ -16,48 +16,49 @@ type UserController struct {
 }
 
 // 获取用户session
-func GetUser(c *beego.Controller) string {
-	userName := c.GetSession("userName")
+func GetUser(this *beego.Controller) string {
+	userName := this.GetSession("userName")
 	if userName != nil{
-		c.Data["userName"] = userName
+		this.Data["userName"] = userName.(string)
+		return userName.(string)
 	} else {
-		c.Data["userName"] = ""
+		this.Data["userName"] = ""
+		return ""
 	}
-	return userName.(string)
 }
 
 // 展示注册页面
-func (c *UserController) ShowReg() {
-	c.TplName = "register.html"
+func (this *UserController) ShowReg() {
+	this.TplName = "register.html"
 }
 
 // 处理注册数据
-func (c *UserController) HandleRed() {
+func (this *UserController) HandleRed() {
 	// 获取数据
-	userName := c.GetString("user_name")
-	password := c.GetString("pwd")
-	confirmPassword := c.GetString("cpwd")
-	email := c.GetString("email")
+	userName := this.GetString("user_name")
+	password := this.GetString("pwd")
+	confirmPassword := this.GetString("cpwd")
+	email := this.GetString("email")
 
 	// 校验数据
 	// 判断是否为空
 	if userName == "" || password == "" || confirmPassword == "" || email == "" {
-		c.Data["errMsg"] = "数据填写不完整，请重新输入~"
-		c.TplName = "register.html"
+		this.Data["errMsg"] = "数据填写不完整，请重新输入~"
+		this.TplName = "register.html"
 		return
 	}
 	// 判断密码与确认密码是否一致
 	if password != confirmPassword {
-		c.Data["errMsg"] = "两次密码输入的不一致，请重新输入~"
-		c.TplName = "register.html"
+		this.Data["errMsg"] = "两次密码输入的不一致，请重新输入~"
+		this.TplName = "register.html"
 		return
 	}
 	// 使用正则判断邮箱格式
 	regex, _ := regexp.Compile("\\w[-\\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\\.)+[A-Za-z]{2,14}")
 	resEmail := regex.FindString(email)
 	if resEmail == "" {
-		c.Data["errMsg"] = "邮箱格式不正确，请重新输入~"
-		c.TplName = "register.html"
+		this.Data["errMsg"] = "邮箱格式不正确，请重新输入~"
+		this.TplName = "register.html"
 		return
 	}
 
@@ -69,8 +70,8 @@ func (c *UserController) HandleRed() {
 	user.Email = email
 	_, err := o.Insert(&user)
 	if err != nil {
-		c.Data["errMsg"] = "用户名已经存在，请重新输入~"
-		c.TplName = "register.html"
+		this.Data["errMsg"] = "用户名已经存在，请重新输入~"
+		this.TplName = "register.html"
 		return
 	}
 
@@ -84,25 +85,25 @@ func (c *UserController) HandleRed() {
 	emailConn.HTML = `尊敬的` + user.Name + `，您好<br><br>感谢您注册鲜淘驿站，为了避免您忘记账号或密码导致您的账户无法找回，请您验证Email地址。<br><br>请复制粘贴下面的链接至浏览器地址栏打开：<br><br>127.0.0.1:8080/active?id=` + strconv.Itoa(user.Id) + `<br>`
 	err = emailConn.Send()
 	if err != nil {
-		c.Data["errMsg"] = "发送激活邮件失败，请重新发送~"
-		c.TplName = "register.html"
+		this.Data["errMsg"] = "发送激活邮件失败，请重新发送~"
+		this.TplName = "register.html"
 		return
 	}
 
 	// 返回视图
-	c.Ctx.WriteString("注册成功，请去邮箱激活用户。")
+	this.Ctx.WriteString("注册成功，请去邮箱激活用户。")
 	// c.Redirect("/login", 302)
 }
 
 // 激活用户
-func (c *UserController) ActiveUser() {
+func (this *UserController) ActiveUser() {
 	// 获取数据
-	id, err := c.GetInt("id")
+	id, err := this.GetInt("id")
 
 	// 校验数据
 	if err != nil {
-		c.Data["errMsg"] = "要激活的用户不存在"
-		c.TplName = "register.html"
+		this.Data["errMsg"] = "要激活的用户不存在"
+		this.TplName = "register.html"
 		return
 	}
 	// 处理数据
@@ -111,41 +112,41 @@ func (c *UserController) ActiveUser() {
 	user.Id = id
 	err = o.Read(&user)
 	if err != nil {
-		c.Data["errMsg"] = "要激活的用户不存在"
-		c.TplName = "register.html"
+		this.Data["errMsg"] = "要激活的用户不存在"
+		this.TplName = "register.html"
 		return
 	}
 	user.Active = true
 	o.Update(&user)
 	// 返回视图
-	c.Redirect("/login", 302)
+	this.Redirect("/login", 302)
 }
 
 // 展示登录页面
-func (c *UserController) ShowLogin() {
-	userName := c.Ctx.GetCookie("userName")
+func (this *UserController) ShowLogin() {
+	userName := this.Ctx.GetCookie("userName")
 	// base64解密
 	tempUserName, _ := base64.StdEncoding.DecodeString(userName)
 	if string(tempUserName) == "" {
 		// 没有记住用户名
-		c.Data["userName"] = ""
-		c.Data["checked"] = ""
+		this.Data["userName"] = ""
+		this.Data["checked"] = ""
 	} else {
-		c.Data["userName"] = string(tempUserName)
-		c.Data["checked"] = "checked"
+		this.Data["userName"] = string(tempUserName)
+		this.Data["checked"] = "checked"
 	}
-	c.TplName = "login.html"
+	this.TplName = "login.html"
 }
 
 // 处理登录数据
-func (c *UserController) HandleLogin() {
+func (this *UserController) HandleLogin() {
 	// 获取数据
-	userName := c.GetString("username")
-	password := c.GetString("pwd")
+	userName := this.GetString("username")
+	password := this.GetString("pwd")
 	// 校验数据
 	if userName == "" || password == "" {
-		c.Data["errMsg"] = "用户名或密码不能为空"
-		c.TplName = "login.html"
+		this.Data["errMsg"] = "用户名或密码不能为空"
+		this.TplName = "login.html"
 		return
 	}
 
@@ -155,49 +156,49 @@ func (c *UserController) HandleLogin() {
 	user.Name = userName
 	err := o.Read(&user, "Name")
 	if err != nil {
-		c.Data["errMsg"] = "用户名或密码错误"
-		c.Data["userName"] = userName
-		c.TplName = "login.html"
+		this.Data["errMsg"] = "用户名或密码错误"
+		this.Data["userName"] = userName
+		this.TplName = "login.html"
 		return
 	}
 	if user.Password != password {
-		c.Data["errMsg"] = "用户名或密码错误"
-		c.Data["userName"] = userName
-		c.TplName = "login.html"
+		this.Data["errMsg"] = "用户名或密码错误"
+		this.Data["userName"] = userName
+		this.TplName = "login.html"
 		return
 	}
 	if user.Active != true {
-		c.Data["errMsg"] = "用户名未激活，请先前往邮箱激活"
-		c.Data["userName"] = userName
-		c.TplName = "login.html"
+		this.Data["errMsg"] = "用户名未激活，请先前往邮箱激活"
+		this.Data["userName"] = userName
+		this.TplName = "login.html"
 		return
 	}
 	// 记住用户名处理
-	rememberMe := c.GetString("remember_me")
+	rememberMe := this.GetString("remember_me")
 	if rememberMe == "on" {
 		// base64加密
 		tempUserName := base64.StdEncoding.EncodeToString([]byte(userName))
-		c.Ctx.SetCookie("userName", tempUserName, time.Second*3600*24*3)
+		this.Ctx.SetCookie("userName", tempUserName, time.Second*3600*24*3)
 	} else {
-		c.Ctx.SetCookie("userName", userName, -1)
+		this.Ctx.SetCookie("userName", userName, -1)
 	}
 	// 登录成功，设置session
-	c.SetSession("userName", userName)
+	this.SetSession("userName", userName)
 
 	// 返回视图
-	c.Redirect("/", 302)
+	this.Redirect("/", 302)
 }
 
 // 退出登录
-func (c *UserController) Logout() {
-	c.DelSession("userName")
+func (this *UserController) Logout() {
+	this.DelSession("userName")
 	// 返回视图
-	c.Redirect("/", 302)
+	this.Redirect("/", 302)
 }
 
 // 展示用户中心信息页面
-func (c *UserController) ShowUserInfo() {
-	userName := GetUser(&c.Controller)
+func (this *UserController) ShowUserInfo() {
+	userName := GetUser(&this.Controller)
 
 	// 查询地址表的内容
 	o := orm.NewOrm()
@@ -205,49 +206,49 @@ func (c *UserController) ShowUserInfo() {
 	var addr models.Address
 	o.QueryTable("Address").RelatedSel("User").Filter("User__Name", userName).Filter("IsDefault", true).One(&addr)
 	if addr.Id == 0 {
-		c.Data["addr"] = ""
+		this.Data["addr"] = ""
 	} else {
-		c.Data["addr"] = addr
+		this.Data["addr"] = addr
 	}
 
 
 	//c.Layout = "user_layout.html"
-	c.Data["userName"] = userName
-	c.TplName = "user_center_info.html"
+	this.Data["userName"] = userName
+	this.TplName = "user_center_info.html"
 }
 
 // 展示用户中心订单页面
-func (c *UserController) ShowUserOrder(){
-	GetUser(&c.Controller)
-	c.TplName = "user_center_order.html"
+func (this *UserController) ShowUserOrder(){
+	GetUser(&this.Controller)
+	this.TplName = "user_center_order.html"
 }
 
 // 展示用户中心收货地址页面
-func (c *UserController) ShowUserAddress(){
-	userName := GetUser(&c.Controller)
+func (this *UserController) ShowUserAddress(){
+	userName := GetUser(&this.Controller)
 	o := orm.NewOrm()
 	var addr models.Address
 	o.QueryTable("Address").RelatedSel("User").Filter("User__Name", userName).Filter("IsDefault", true).One(&addr)
 
-	c.Data["addr"] = addr
-	c.TplName = "user_center_site.html"
+	this.Data["addr"] = addr
+	this.TplName = "user_center_site.html"
 }
 
 // 处理用户中心收货地址数据
-func (c *UserController) HandleUserAddress(){
+func (this *UserController) HandleUserAddress(){
 	// 获取数据
-	receiver := c.GetString("receiver")
-	address := c.GetString("address")
-	zipCode := c.GetString("zip_code")
-	phone := c.GetString("phone")
+	receiver := this.GetString("receiver")
+	address := this.GetString("address")
+	zipCode := this.GetString("zip_code")
+	phone := this.GetString("phone")
 	// 校验数据(推荐使用正则校验，这里先使用判空)
 	if receiver == "" || address == "" || zipCode == "" || phone == "" {
-		c.Data["errMsg"] = "添加数据不完整，请重新输入~"
-		c.Data["receiver"] = receiver
-		c.Data["address"] = address
-		c.Data["zipCode"] = zipCode
-		c.Data["phone"] = phone
-		c.TplName = "user_center_site.html"
+		this.Data["errMsg"] = "添加数据不完整，请重新输入~"
+		this.Data["receiver"] = receiver
+		this.Data["address"] = address
+		this.Data["zipCode"] = zipCode
+		this.Data["phone"] = phone
+		this.TplName = "user_center_site.html"
 		return
 	}
 	// 处理数据(插入数据)
@@ -263,7 +264,7 @@ func (c *UserController) HandleUserAddress(){
 	/*	更新默认地址时，给原来的地址对象的ID赋值了
 	这时用原来的地址对象插入意思是用原来的ID做插入操作，会报错。*/
 	// 关联用户表
-	userName := c.GetSession("userName")
+	userName := this.GetSession("userName")
 	var user models.User
 	user.Name = userName.(string)
 	o.Read(&user, "Name")
@@ -278,5 +279,5 @@ func (c *UserController) HandleUserAddress(){
 	o.Insert(&newUserAddress)
 
 	// 返回视图
-	c.Redirect("/u/address", 302)
+	this.Redirect("/u/address", 302)
 }
