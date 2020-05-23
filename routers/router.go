@@ -24,6 +24,8 @@ func init() {
 	beego.Router("/u/order", &controllers.UserController{}, "get:ShowUserOrder")
 	// 用户中心收货地址
 	beego.Router("/u/address", &controllers.UserController{}, "get:ShowUserAddress;post:HandleUserAddress")
+	// 商品详情
+	beego.Router("/goods-detail", &controllers.GoodsController{}, "get:ShowGoodsDetail")
 }
 
 var loginFilter = func(ctx *context.Context) {

@@ -89,7 +89,7 @@ type IndexTypeGoodsBanner struct {
 	Id          int
 	GoodsType   *GoodsType `orm:"rel(fk)"`
 	GoodsSKU    *GoodsSKU  `orm:"rel(fk)"`
-	DisplayType int        `orm:"default(1)"` // 展示类型：0 代表图片；1 代表文字
+	DisplayType int        `orm:"default(1)"` // 展示类型：0 代表文字；1 代表图片
 	Index       int        `orm:"default(0)"` // 展示顺序
 }
 
