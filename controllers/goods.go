@@ -1,8 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
+	"github.com/gomodule/redigo/redis"
+	"strconv"
 	"xian-tao/models"
 )
 
@@ -68,9 +71,6 @@ func (this *GoodsController) ShowIndex() {
 
 // 显示商品详情页
 func (this *GoodsController) ShowGoodsDetail() {
-	userName := GetUser(&this.Controller)
-	this.Data["userName"] = userName
-
 	goodsId, err := this.GetInt("id")
 	if err != nil {
 		this.Redirect("/", 302)
@@ -90,6 +90,31 @@ func (this *GoodsController) ShowGoodsDetail() {
 
 	// 获取所有商品类型
 	GetGoodsType(&this.Controller)
+
+	// 添加登录用户的历史浏览记录
+	userName := this.GetSession("userName")
+	if userName == nil {
+		// 未登录
+		this.Data["userName"] = ""
+	} else {
+		// 已登录
+		this.Data["userName"] = userName.(string)
+
+		var user models.User
+		user.Name = userName.(string)
+		o.Read(&user, "Name")
+
+		// 添加浏览记录
+		conn, err := redis.Dial("tcp", ":6379")
+		defer conn.Close()
+		if err != nil {
+			fmt.Println("redis连接失败")
+		}
+		// 把以前相同商品的浏览记录删除
+		conn.Do("lrem", "history_" + strconv.Itoa(user.Id), 0, goodsId)
+		// 添加新的商品浏览记录
+		conn.Do("lpush", "history_" + strconv.Itoa(user.Id), goodsId)
+	}
 
 	this.TplName = "detail.html"
 }

@@ -2,9 +2,11 @@ package controllers
 
 import (
 	"encoding/base64"
+	"fmt"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/utils"
+	"github.com/gomodule/redigo/redis"
 	"regexp"
 	"strconv"
 	"time"
@@ -18,7 +20,7 @@ type UserController struct {
 // 获取用户session
 func GetUser(this *beego.Controller) string {
 	userName := this.GetSession("userName")
-	if userName != nil{
+	if userName != nil {
 		this.Data["userName"] = userName.(string)
 		return userName.(string)
 	} else {
@@ -76,7 +78,7 @@ func (this *UserController) HandleRed() {
 	}
 
 	// 发送激活邮件
-	emailConfig := `{"username":"431592976@qq.com","password":"nabvchjshgkacbbb","host":"smtp.qq.com","port":587}`
+	emailConfig := `{"username":"431592976@qq.com","password":"dqswhbiianuibifj","host":"smtp.qq.com","port":587}`
 	emailConn := utils.NewEMail(emailConfig)
 	emailConn.From = "431592976@qq.com" // 指定发件人的邮箱地址
 	emailConn.To = []string{user.Email} // 指定收件人邮箱地址
@@ -198,8 +200,8 @@ func (this *UserController) Logout() {
 
 // 展示用户中心信息页面
 func (this *UserController) ShowUserInfo() {
-	userName := GetUser(&this.Controller)
-
+	userName := this.GetSession("userName")
+	this.Data["userName"] = userName
 	// 查询地址表的内容
 	o := orm.NewOrm()
 	// 高级查询  表关联
@@ -211,20 +213,40 @@ func (this *UserController) ShowUserInfo() {
 		this.Data["addr"] = addr
 	}
 
+	// 获取登录用户历史浏览记录
+	var user models.User
+	user.Name = userName.(string)
+	o.Read(&user, "Name")
 
-	//c.Layout = "user_layout.html"
-	this.Data["userName"] = userName
+	conn, err := redis.Dial("tcp", ":6379")
+	defer conn.Close()
+	if err != nil {
+		fmt.Println("redis连接失败")
+	}
+	var historyGoodsSKUs []models.GoodsSKU
+	rep, err := conn.Do("lrange", "history_"+strconv.Itoa(user.Id), 0, 4)
+	// 回复助手函数
+	historyGoodsIDs, _ := redis.Ints(rep, err) // 历史浏览商品ID
+
+	for _, value := range historyGoodsIDs {
+		var historyGoodsSKU models.GoodsSKU
+		historyGoodsSKU.Id = value
+		o.Read(&historyGoodsSKU)
+		historyGoodsSKUs = append(historyGoodsSKUs, historyGoodsSKU)
+	}
+	this.Data["historyGoodsSKUs"] = historyGoodsSKUs
+	
 	this.TplName = "user_center_info.html"
 }
 
 // 展示用户中心订单页面
-func (this *UserController) ShowUserOrder(){
+func (this *UserController) ShowUserOrder() {
 	GetUser(&this.Controller)
 	this.TplName = "user_center_order.html"
 }
 
 // 展示用户中心收货地址页面
-func (this *UserController) ShowUserAddress(){
+func (this *UserController) ShowUserAddress() {
 	userName := GetUser(&this.Controller)
 	o := orm.NewOrm()
 	var addr models.Address
@@ -235,7 +257,7 @@ func (this *UserController) ShowUserAddress(){
 }
 
 // 处理用户中心收货地址数据
-func (this *UserController) HandleUserAddress(){
+func (this *UserController) HandleUserAddress() {
 	// 获取数据
 	receiver := this.GetString("receiver")
 	address := this.GetString("address")
@@ -262,7 +284,7 @@ func (this *UserController) HandleUserAddress(){
 		o.Update(&userAddress)
 	}
 	/*	更新默认地址时，给原来的地址对象的ID赋值了
-	这时用原来的地址对象插入意思是用原来的ID做插入操作，会报错。*/
+		这时用原来的地址对象插入意思是用原来的ID做插入操作，会报错。*/
 	// 关联用户表
 	userName := this.GetSession("userName")
 	var user models.User
