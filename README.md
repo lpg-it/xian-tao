@@ -10,7 +10,7 @@
 
 ### 技术栈
 
-- 语言：Golang1.14.2
+- 语言：Golang 1.14.2
 - 框架：Beego
 - 数据库：MySQL、Redis
 - 分布式文件存储：FastDFS

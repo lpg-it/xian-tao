@@ -5,6 +5,7 @@ import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 	"github.com/gomodule/redigo/redis"
+	"math"
 	"strconv"
 	"xian-tao/models"
 )
@@ -19,6 +20,24 @@ func GetGoodsType(this *beego.Controller){
 	var goodsTypes []models.GoodsType
 	o.QueryTable("GoodsType").All(&goodsTypes)
 	this.Data["goodsTypes"] = goodsTypes
+}
+
+// 分页控制
+func pageTool(pageCount, pageIndex int) []int {
+	var pages []int
+	if pageCount <= 5 {
+		pages = make([]int, pageCount)
+		for i, _ := range pages {
+			pages[i] = i + 1
+		}
+	} else if pageIndex <= 3 {
+		pages = []int{1, 2, 3, 4, 5}
+	} else if pageIndex >= pageCount - 3 {
+		pages = []int{pageCount - 4, pageCount - 3, pageCount - 2, pageCount - 1, pageCount}
+	} else {
+		pages = []int{pageIndex - 2, pageIndex - 1, pageIndex, pageIndex + 1, pageIndex + 2}
+	}
+	return pages
 }
 
 // 显示主页
@@ -117,4 +136,57 @@ func (this *GoodsController) ShowGoodsDetail() {
 	}
 
 	this.TplName = "detail.html"
+}
+
+// 显示 商品列表 页
+func (this *GoodsController) ShowGoodsList() {
+	GetUser(&this.Controller)
+	goodsTypeId, err := this.GetInt("type-id")
+	if err != nil {
+		fmt.Println("获取商品类型失败")
+	}
+	this.Data["goodsTypeId"] = goodsTypeId
+
+	o := orm.NewOrm()
+	// 新品推荐
+	var newGoodsSKUs []models.GoodsSKU
+	o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id", goodsTypeId).OrderBy("Time").Limit(2, 0).All(&newGoodsSKUs)
+	this.Data["newGoodsSKUs"] = newGoodsSKUs
+
+	// 商品分页
+	// 对应类型商品总数量
+	goodsCount, _ := o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id", goodsTypeId).Count()
+	pageSize := 1  // 每一页显示多少个商品
+	pageCount := math.Ceil(float64(int(goodsCount) / pageSize))  // 总共多少页
+	pageIndex, err := this.GetInt("page-index")
+	if err != nil {
+		pageIndex = 1
+	}
+	this.Data["pageIndex"] = pageIndex
+
+	// 商品列表
+	var goodsSKUs []models.GoodsSKU
+	start := (pageIndex - 1) * pageSize
+	o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id", goodsTypeId).Limit(pageSize, start).All(&goodsSKUs)
+	this.Data["goodsSKUs"] = goodsSKUs
+
+	// 显示的页码
+	pages := pageTool(int(pageCount), pageIndex)
+	this.Data["pages"] = pages
+
+	// 上一页
+	prePageIndex := pageIndex - 1
+	if prePageIndex <= 1 {
+		prePageIndex = 1
+	}
+	this.Data["prePageIndex"] = prePageIndex
+
+	// 下一页
+	nextPageIndex := pageIndex + 1
+	if nextPageIndex >= int(pageCount) {
+		nextPageIndex = int(pageCount)
+	}
+	this.Data["nextPageIndex"] = nextPageIndex
+
+	this.TplName = "list.html"
 }
