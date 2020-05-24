@@ -28,6 +28,8 @@ func init() {
 	beego.Router("/goods-detail", &controllers.GoodsController{}, "get:ShowGoodsDetail")
 	// 商品列表
 	beego.Router("/goods-list", &controllers.GoodsController{}, "get:ShowGoodsList")
+	// 商品搜索
+	beego.Router("/goods-search", &controllers.GoodsController{}, "post:HandleGoodsSearch")
 }
 
 var loginFilter = func(ctx *context.Context) {

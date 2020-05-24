@@ -20,22 +20,26 @@ func GetGoodsType(this *beego.Controller){
 	var goodsTypes []models.GoodsType
 	o.QueryTable("GoodsType").All(&goodsTypes)
 	this.Data["goodsTypes"] = goodsTypes
+
 }
 
 // 分页控制
 func pageTool(pageCount, pageIndex int) []int {
 	var pages []int
-	if pageCount <= 5 {
+	if pageCount <= 5 {  // 总页码数小于5，全部都显示
 		pages = make([]int, pageCount)
 		for i, _ := range pages {
 			pages[i] = i + 1
 		}
-	} else if pageIndex <= 3 {
+	} else if pageIndex <= 3 {  // 总页码数大于5，但是当前页码位于前三页
 		pages = []int{1, 2, 3, 4, 5}
-	} else if pageIndex >= pageCount - 3 {
+	} else if pageIndex >= pageCount - 3 {  // 总页码数大于5，但是当前页码位于后三页
 		pages = []int{pageCount - 4, pageCount - 3, pageCount - 2, pageCount - 1, pageCount}
 	} else {
 		pages = []int{pageIndex - 2, pageIndex - 1, pageIndex, pageIndex + 1, pageIndex + 2}
+	}
+	if len(pages) == 0 {
+		pages = append(pages, 1)
 	}
 	return pages
 }
@@ -148,6 +152,15 @@ func (this *GoodsController) ShowGoodsList() {
 	this.Data["goodsTypeId"] = goodsTypeId
 
 	o := orm.NewOrm()
+	// 获取当前商品类型名称
+	var goodsType models.GoodsType
+	goodsType.Id = goodsTypeId
+	o.Read(&goodsType)
+	this.Data["goodsType"] = goodsType
+
+	// 获取所有商品类型
+	GetGoodsType(&this.Controller)
+
 	// 新品推荐
 	var newGoodsSKUs []models.GoodsSKU
 	o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id", goodsTypeId).OrderBy("Time").Limit(2, 0).All(&newGoodsSKUs)
@@ -156,7 +169,7 @@ func (this *GoodsController) ShowGoodsList() {
 	// 商品分页
 	// 对应类型商品总数量
 	goodsCount, _ := o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id", goodsTypeId).Count()
-	pageSize := 1  // 每一页显示多少个商品
+	pageSize := 5  // 每一页显示多少个商品
 	pageCount := math.Ceil(float64(int(goodsCount) / pageSize))  // 总共多少页
 	pageIndex, err := this.GetInt("page-index")
 	if err != nil {
@@ -167,8 +180,20 @@ func (this *GoodsController) ShowGoodsList() {
 	// 商品列表
 	var goodsSKUs []models.GoodsSKU
 	start := (pageIndex - 1) * pageSize
-	o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id", goodsTypeId).Limit(pageSize, start).All(&goodsSKUs)
-	this.Data["goodsSKUs"] = goodsSKUs
+
+	// 商品排序
+	sortType := this.GetString("sort")
+	if sortType == "price" {
+		o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id", goodsTypeId).OrderBy("Price").Limit(pageSize, start).All(&goodsSKUs)
+		this.Data["goodsSKUs"] = goodsSKUs
+	} else if sortType == "sale" {
+		o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id", goodsTypeId).OrderBy("Sales").Limit(pageSize, start).All(&goodsSKUs)
+		this.Data["goodsSKUs"] = goodsSKUs
+	}else {
+		o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id", goodsTypeId).Limit(pageSize, start).All(&goodsSKUs)
+		this.Data["goodsSKUs"] = goodsSKUs
+	}
+	this.Data["sortType"] = sortType
 
 	// 显示的页码
 	pages := pageTool(int(pageCount), pageIndex)
@@ -189,4 +214,32 @@ func (this *GoodsController) ShowGoodsList() {
 	this.Data["nextPageIndex"] = nextPageIndex
 
 	this.TplName = "list.html"
+}
+
+// 处理 搜索商品 结果
+func (this *GoodsController) HandleGoodsSearch(){
+	GetUser(&this.Controller)
+
+	goodsSearchName := this.GetString("goods_search_name")
+	o := orm.NewOrm()
+	// 获取所有商品类型
+	GetGoodsType(&this.Controller)
+
+	// 展示商品搜索结果数据
+	var goodsSKUs []models.GoodsSKU
+	if goodsSearchName == "" {
+		o.QueryTable("GoodsSKU").All(&goodsSKUs)
+		this.Data["goodsSKUs"] = goodsSKUs
+		this.TplName = "search.html"
+		return
+	}
+	o.QueryTable("GoodsSKU").Filter("Name__icontains", goodsSearchName).All(&goodsSKUs)
+	this.Data["goodsSKUs"] = goodsSKUs
+
+	// 新品推荐
+	var newGoodsSKUs []models.GoodsSKU
+	o.QueryTable("GoodsSKU").OrderBy("Time").Limit(2, 0).All(&newGoodsSKUs)
+	this.Data["newGoodsSKUs"] = newGoodsSKUs
+
+	this.TplName = "search.html"
 }

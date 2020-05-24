@@ -11,43 +11,14 @@
 <body>
 {{ template "common/header.html" .userName }}
 
-<div class="search_bar clearfix">
-    <a href="index.html" class="logo fl"><img src="/static/images/logo.png"></a>
-    <div class="search_con fl">
-        <input type="text" class="input_text fl" name="" placeholder="搜索商品">
-        <input type="button" class="input_btn fr" name="" value="搜索">
-    </div>
-    <div class="guest_cart fr">
-        <a href="cart.html" class="cart_name fl">我的购物车</a>
-        <div class="goods_count fl" id="show_count">1</div>
-    </div>
-</div>
+{{ template "common/search_bar.html"}}
 
-<div class="navbar_con">
-    <div class="navbar clearfix">
-        <div class="subnav_con fl">
-            <h1>全部商品分类</h1>
-            <span></span>
-            <ul class="subnav">
-                {{ range .goodsTypes }}
-                <li><a href="#" class="fruit">{{ .Name }}</a></li>
-                {{ end }}
-            </ul>
-        </div>
-        <ul class="navlist fl">
-            <li><a href="">首页</a></li>
-            <li class="interval">|</li>
-            <li><a href="">手机生鲜</a></li>
-            <li class="interval">|</li>
-            <li><a href="">抽奖</a></li>
-        </ul>
-    </div>
-</div>
+{{ template "common/navbar_con.html" .goodsTypes}}
 
 <div class="breadcrumb">
     <a href="#">全部分类</a>
     <span>></span>
-    <a href="#">{{ .goodsSKU.GoodsType.Name }}</a>
+    <a href="/goods-list?type-id={{ .goodsSKU.GoodsType.Id }}">{{ .goodsSKU.GoodsType.Name }}</a>
     <span>></span>
     <a href="/goods-detail?id={{ .goodsSKU.Id }}">商品详情</a>
 </div>
@@ -113,8 +84,48 @@
 {{ template "common/footer.html"}}
 <div class="add_jump"></div>
 
-<script type="text/javascript" src="/static/js/jquery-1.12.2.js"></script>
+<script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
 <script type="text/javascript">
+    UpdateGoodsPrice()
+
+    // 更新总价
+    function UpdateGoodsPrice() {
+        // 获取商品 单价 和 数量
+        price = $('.show_pirze').children('em').text();
+        count = $('.num_show').val();
+
+        price = parseFloat(price)
+        count = parseInt(count)
+
+        total = price * count
+
+        // 更新总价
+        $('.total').children('em').text(total.toFixed(2) + '元')
+    }
+
+    // 增加商品数量
+    $('.add').click(function () {
+        count = $('.num_show').val();
+        count = parseInt(count) + 1
+        // 更新数量
+        $('.num_show').val(count);
+        // 更新总价
+        UpdateGoodsPrice()
+    });
+
+    // 减少商品数量
+    $('.minus').click(function () {
+        count = $('.num_show').val();
+        count = parseInt(count) - 1
+        if (1 > count) {
+            count = 1
+        }
+        // 更新数量
+        $('.num_show').val(count);
+        // 更新总价
+        UpdateGoodsPrice()
+    });
+
     var $add_x = $('#add_cart').offset().top;
     var $add_y = $('#add_cart').offset().left;
 

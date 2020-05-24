@@ -241,13 +241,18 @@ func (this *UserController) ShowUserInfo() {
 
 // 展示用户中心订单页面
 func (this *UserController) ShowUserOrder() {
-	GetUser(&this.Controller)
+	userName := GetUser(&this.Controller)
+	this.Data["userName"] = userName
+
 	this.TplName = "user_center_order.html"
 }
 
 // 展示用户中心收货地址页面
 func (this *UserController) ShowUserAddress() {
 	userName := GetUser(&this.Controller)
+	this.Data["userName"] = userName
+
+
 	o := orm.NewOrm()
 	var addr models.Address
 	o.QueryTable("Address").RelatedSel("User").Filter("User__Name", userName).Filter("IsDefault", true).One(&addr)
@@ -287,6 +292,7 @@ func (this *UserController) HandleUserAddress() {
 		这时用原来的地址对象插入意思是用原来的ID做插入操作，会报错。*/
 	// 关联用户表
 	userName := this.GetSession("userName")
+
 	var user models.User
 	user.Name = userName.(string)
 	o.Read(&user, "Name")
