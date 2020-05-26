@@ -31,6 +31,7 @@ func GetUser(this *beego.Controller) string {
 
 // 展示注册页面
 func (this *UserController) ShowReg() {
+	this.Data["title"] = "鲜淘驿站 - 注册"
 	this.TplName = "register.html"
 }
 
@@ -137,6 +138,8 @@ func (this *UserController) ShowLogin() {
 		this.Data["userName"] = string(tempUserName)
 		this.Data["checked"] = "checked"
 	}
+
+	this.Data["title"] = "鲜淘驿站 - 登录"
 	this.TplName = "login.html"
 }
 
@@ -235,7 +238,8 @@ func (this *UserController) ShowUserInfo() {
 		historyGoodsSKUs = append(historyGoodsSKUs, historyGoodsSKU)
 	}
 	this.Data["historyGoodsSKUs"] = historyGoodsSKUs
-	
+
+	this.Data["title"] = "鲜淘驿站 - 用户中心"
 	this.TplName = "user_center_info.html"
 }
 
@@ -244,6 +248,7 @@ func (this *UserController) ShowUserOrder() {
 	userName := GetUser(&this.Controller)
 	this.Data["userName"] = userName
 
+	this.Data["title"] = "鲜淘驿站 - 用户中心"
 	this.TplName = "user_center_order.html"
 }
 
@@ -258,6 +263,8 @@ func (this *UserController) ShowUserAddress() {
 	o.QueryTable("Address").RelatedSel("User").Filter("User__Name", userName).Filter("IsDefault", true).One(&addr)
 
 	this.Data["addr"] = addr
+
+	this.Data["title"] = "鲜淘驿站 - 用户中心"
 	this.TplName = "user_center_site.html"
 }
 

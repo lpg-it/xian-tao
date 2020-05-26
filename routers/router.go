@@ -1,19 +1,19 @@
 package routers
 
 import (
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 	"xian-tao/controllers"
-	"github.com/astaxie/beego"
 )
 
 func init() {
 	beego.InsertFilter("/u/*", beego.BeforeExec, loginFilter)
-    // 注册
+	// 注册
 	beego.Router("/register", &controllers.UserController{}, "get:ShowReg;post:HandleRed")
-    // 登录
-    beego.Router("/login", &controllers.UserController{}, "get:ShowLogin;post:HandleLogin")
-    // 激活用户
-    beego.Router("/active", &controllers.UserController{}, "get:ActiveUser")
+	// 登录
+	beego.Router("/login", &controllers.UserController{}, "get:ShowLogin;post:HandleLogin")
+	// 激活用户
+	beego.Router("/active", &controllers.UserController{}, "get:ActiveUser")
 	// 主页
 	beego.Router("/", &controllers.GoodsController{}, "get:ShowIndex")
 	// 退出登录
@@ -30,6 +30,10 @@ func init() {
 	beego.Router("/goods-list", &controllers.GoodsController{}, "get:ShowGoodsList")
 	// 商品搜索
 	beego.Router("/goods-search", &controllers.GoodsController{}, "post:HandleGoodsSearch")
+	// 添加购物车
+	beego.Router("/u/add-cart", &controllers.CartController{}, "post:HandleAddCart")
+	// 购物车页面
+	beego.Router("/u/cart", &controllers.CartController{}, "get:ShowCart")
 }
 
 var loginFilter = func(ctx *context.Context) {
@@ -39,4 +43,3 @@ var loginFilter = func(ctx *context.Context) {
 		return
 	}
 }
-

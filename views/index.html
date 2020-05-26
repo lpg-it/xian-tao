@@ -1,19 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-<head>
-    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-    <title>鲜淘驿站-首页</title>
-    <link rel="stylesheet" type="text/css" href="/static/css/reset.css">
-    <link rel="stylesheet" type="text/css" href="/static/css/main.css">
-    <script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
-    <script type="text/javascript" src="/static/js/jquery-ui.min.js"></script>
-    <script type="text/javascript" src="/static/js/slide.js"></script>
-</head>
+{{ template "common/head.html" .title}}
 <body>
 {{ template "common/header.html" .userName }}
 
-{{ template "common/search_bar.html"}}
+{{ template "common/search_bar.html" .goodsSKUCount}}
 
 <div class="navbar_con">
     <div class="navbar">
@@ -80,8 +69,9 @@
 {{ end }}
 
 {{ template "common/footer.html"}}
-
-<script type="text/javascript" src="/static/js/slideshow.js"></script>
+<script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="/static/js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="/static/js/slide.js"></script>
 <script type="text/javascript">
     BCSlideshow('focuspic');
     var oFruit = document.getElementById('fruit_more');

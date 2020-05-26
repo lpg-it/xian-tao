@@ -88,6 +88,11 @@ func (this *GoodsController) ShowIndex() {
 	}
 	this.Data["goods"] = goods
 
+	// 获取购物车商品数量
+	goodsSKUCount := GetCartGoodsCount(&this.Controller)
+	this.Data["goodsSKUCount"] = goodsSKUCount
+
+	this.Data["title"] = "欢迎来到鲜淘驿站"
 	// 返回视图
 	this.TplName = "index.html"
 }
@@ -132,13 +137,20 @@ func (this *GoodsController) ShowGoodsDetail() {
 		defer conn.Close()
 		if err != nil {
 			fmt.Println("redis连接失败")
+			return
 		}
+
 		// 把以前相同商品的浏览记录删除
 		conn.Do("lrem", "history_" + strconv.Itoa(user.Id), 0, goodsId)
 		// 添加新的商品浏览记录
 		conn.Do("lpush", "history_" + strconv.Itoa(user.Id), goodsId)
 	}
 
+	// 获取购物车商品数量
+	goodsSKUCount := GetCartGoodsCount(&this.Controller)
+	this.Data["goodsSKUCount"] = goodsSKUCount
+
+	this.Data["title"] = "鲜淘驿站 - 商品详情"
 	this.TplName = "detail.html"
 }
 
@@ -213,6 +225,11 @@ func (this *GoodsController) ShowGoodsList() {
 	}
 	this.Data["nextPageIndex"] = nextPageIndex
 
+	// 获取购物车商品数量
+	goodsSKUCount := GetCartGoodsCount(&this.Controller)
+	this.Data["goodsSKUCount"] = goodsSKUCount
+
+	this.Data["title"] = "鲜淘驿站 - 商品列表"
 	this.TplName = "list.html"
 }
 

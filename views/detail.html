@@ -1,17 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-<head>
-    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-    <title>天天生鲜-商品详情</title>
-    <link rel="stylesheet" type="text/css" href="/static/css/reset.css">
-    <link rel="stylesheet" type="text/css" href="/static/css/main.css">
-
-</head>
+{{ template "common/head.html" .title}}
 <body>
 {{ template "common/header.html" .userName }}
 
-{{ template "common/search_bar.html"}}
+{{ template "common/search_bar.html" .goodsSKUCount }}
 
 {{ template "common/navbar_con.html" .goodsTypes}}
 
@@ -44,7 +35,7 @@
         <div class="total">总价：<em>16.80元</em></div>
         <div class="operate_btn">
             <a href="javascript:;" class="buy_btn">立即购买</a>
-            <a href="javascript:;" class="add_cart" id="add_cart">加入购物车</a>
+            <a href="javascript:;" class="add_cart" id="add_cart" goods_sku_id="{{ .goodsSKU.Id }}">加入购物车</a>
         </div>
     </div>
 </div>
@@ -86,9 +77,9 @@
 
 <script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
 <script type="text/javascript">
+    // 更新总价
     UpdateGoodsPrice()
 
-    // 更新总价
     function UpdateGoodsPrice() {
         // 获取商品 单价 和 数量
         price = $('.show_pirze').children('em').text();
@@ -126,24 +117,39 @@
         UpdateGoodsPrice()
     });
 
-    var $add_x = $('#add_cart').offset().top;
-    var $add_y = $('#add_cart').offset().left;
+    // 手动输入商品数量
+    $('.num_show').blur(function () {
+        // 获取输入框内容
+        count = $(this).val()
+        // 对数据进行校验
+        if (isNaN(count) || count.trim().length == 0 || 1 > parseInt(count)) {
+            count = 1
+        }
+        // 在页面显示
+        $(this).val(parseInt(count))
+        // 更新总价
+        UpdateGoodsPrice()
+    })
 
-    var $to_x = $('#show_count').offset().top;
-    var $to_y = $('#show_count').offset().left;
+    // var $add_x = $('#add_cart').offset().top;
+    // var $add_y = $('#add_cart').offset().left;
+    //
+    // var $to_x = $('#show_count').offset().top;
+    // var $to_y = $('#show_count').offset().left;
 
-    $(".add_jump").css({'left': $add_y + 80, 'top': $add_x + 10, 'display': 'block'})
+    // $(".add_jump").css({'left': $add_y + 80, 'top': $add_x + 10, 'display': 'block'})
     $('#add_cart').click(function () {
-        $(".add_jump").stop().animate({
-                'left': $to_y + 7,
-                'top': $to_x + 7
-            },
-            "fast", function () {
-                $(".add_jump").fadeOut('fast', function () {
-                    $('#show_count').html(2);
-                });
+        goods_sku_id = $('#add_cart').attr('goods_sku_id')
+        goods_count = $('.num_show').val()
 
-            });
+        param = {"goods_sku_id": goods_sku_id, "goods_count": goods_count}
+        $.post('/u/add-cart', param, function (data) {
+            if (data.code == 0) {
+                $('.goods_count').html(data.goodsSKUCount);
+            } else {
+                alert(data.msg)
+            }
+        })
     })
 </script>
 
