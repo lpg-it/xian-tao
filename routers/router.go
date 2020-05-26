@@ -34,6 +34,8 @@ func init() {
 	beego.Router("/u/add-cart", &controllers.CartController{}, "post:HandleAddCart")
 	// 购物车页面
 	beego.Router("/u/cart", &controllers.CartController{}, "get:ShowCart")
+	// 更新购物车数量
+	beego.Router("/u/update-cart", &controllers.CartController{}, "post:HandleUpdateCart")
 }
 
 var loginFilter = func(ctx *context.Context) {

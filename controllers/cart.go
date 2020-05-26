@@ -109,6 +109,9 @@ func (this *CartController) ShowCart() {
 	goodsSKUs := make([]map[string]interface{}, len(cartGoods))
 	i := 0
 
+	allGoodsPrice := 0
+	allGoodsCount := 0
+
 	for index, value := range cartGoods { // index: 商品id，value：商品数量
 		goodsSKUId, _ := strconv.Atoi(index)
 		var goodsSKU models.GoodsSKU
@@ -119,13 +122,60 @@ func (this *CartController) ShowCart() {
 		goodsInfo["goodsSKU"] = goodsSKU
 		goodsInfo["goodsCount"] = value
 
+		// 所有商品的总价
+		allGoodsPrice += goodsSKU.Price * value
+		// 所有商品件数
+		allGoodsCount += value
+
+		// 单个商品的总价（商品单价 * 商品数量）
 		goodsInfo["goodsTotalPrice"] = goodsSKU.Price * value
 
 		goodsSKUs[i] = goodsInfo
 		i += 1
 	}
+	this.Data["allGoodsPrice"] = allGoodsPrice
+	this.Data["allGoodsCount"] = allGoodsCount
 	this.Data["goodsSKUs"] = goodsSKUs
 
 	this.Data["title"] = "鲜淘驿站 - 购物车"
 	this.TplName = "cart.html"
+}
+
+// 更新购物车数量
+func (this *CartController) HandleUpdateCart(){
+	// 获取数据
+	goodsSKUId, err1 := this.GetInt("goods_sku_id")
+	goodsCount, err2 := this.GetInt("goods_count")
+	resp := make(map[string]interface{})
+	defer this.ServeJSON()
+	if err1 != nil || err2 != nil {
+		resp["code"] = 1
+		resp["msg"] = "获取数据失败"
+		this.Data["json"] = resp
+		return
+	}
+	userName := GetUser(&this.Controller)
+
+	// 获取用户ID
+	o := orm.NewOrm()
+	var user models.User
+	user.Name = userName
+	o.Read(&user, "Name")
+
+	conn, err := redis.Dial("tcp", ":6379")
+	defer conn.Close()
+	if err != nil {
+		resp["code"] = 2
+		resp["msg"] = "redis数据库连接失败"
+		this.Data["json"] = resp
+		return
+	}
+	conn.Do("hset", "cart_" + strconv.Itoa(user.Id), goodsSKUId, goodsCount)
+	resp["code"] = 0
+	resp["msg"] = "ok"
+	this.Data["json"] = resp
+
+	this.Data["title"] = "鲜淘驿站 - 购物车"
+
+
 }

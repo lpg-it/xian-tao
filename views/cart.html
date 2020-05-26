@@ -1,16 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
-<head>
-    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-    <title>天天生鲜-购物车</title>
-    <link rel="stylesheet" type="text/css" href="/static/css/reset.css">
-    <link rel="stylesheet" type="text/css" href="/static/css/main.css">
-</head>
+{{ template "common/head.html" .title}}
 <body>
 {{ template "common/header.html" .userName }}
 
-{{ template "common/search_bar.html"}}
+{{ template "common/search.html"}}
 
 <div class="total_count">全部商品<em>2</em>件</div>
 <ul class="cart_list_th clearfix">
@@ -32,11 +24,11 @@
         <li class="col06">
             <div class="num_add">
                 <a href="javascript:;" class="add fl">+</a>
-                <input type="text" class="num_show fl" value="{{ .goodsCount }}">
+                <input type="text" class="num_show fl" goods_sku_id="{{ .goodsSKU.Id }}" value="{{ .goodsCount }}">
                 <a href="javascript:;" class="minus fl">-</a>
             </div>
         </li>
-        <li class="col07">16.80元</li>
+        <li class="col07">{{ .goodsTotalPrice }}元</li>
         <li class="col08"><a href="javascript:;">删除</a></li>
     </ul>
 {{ end }}
@@ -44,23 +36,117 @@
 <ul class="settlements">
     <li class="col01"><input type="checkbox" name="" checked=""></li>
     <li class="col02">全选</li>
-    <li class="col03">合计(不含运费)：<span>¥</span><em>42.60</em><br>共计<b>2</b>件商品</li>
+    <li class="col03">合计(不含运费)：<span>¥</span><em>{{ .allGoodsPrice }}</em><br>共计<b>{{ .allGoodsCount }}</b>件商品</li>
     <li class="col04"><a href="place_order.html">去结算</a></li>
 </ul>
 
-<div class="footer">
-    <div class="foot_link">
-        <a href="#">关于我们</a>
-        <span>|</span>
-        <a href="#">联系我们</a>
-        <span>|</span>
-        <a href="#">招聘人才</a>
-        <span>|</span>
-        <a href="#">友情链接</a>
-    </div>
-    <p>CopyRight © 2016 北京天天生鲜信息技术有限公司 All Rights Reserved</p>
-    <p>电话：010-****888 京ICP备*******8号</p>
-</div>
+{{ template "common/footer.html"}}
+<script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="/static/js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="/static/js/slide.js"></script>
+<script type="text/javascript">
+    // 更新购物总价格 总件数
+    function UpdateCartGoodsPrice() {
+        total_price = 0;
+        total_count = 0;
+        $('.cart_list_td').find(':checked').parents('ul').each(function () {
+            goods_count = parseInt($(this).find('.num_show').val());
+            goods_price = parseFloat($(this).children('.col07').text());
 
+            total_price += goods_price;
+            total_count += goods_count;
+        })
+        $('.settlements').children('.col03').children('em').text(total_price)
+        $('.settlements').children('.col03').children('b').text(total_count)
+    }
+
+    // 设置 全选 与 全不选
+    $('.settlements').find(':checkbox').change(function () {
+        is_checked = $(this).prop('checked');
+        $('.cart_list_td').find(':checkbox').each(function () {
+            $(this).prop('checked', is_checked)
+        })
+        UpdateCartGoodsPrice();
+    })
+
+    // 根据商品的选中状态 改变全选状态
+    $('.cart_list_td').find(':checkbox').change(function () {
+        checkbox_length = $('.cart_list_td').find(':checkbox').length
+        checked_length = $('.cart_list_td').find(':checked').length
+
+        if (checkbox_length > checked_length) {
+            $('.settlements').find(':checkbox').prop('checked', "")
+        } else {
+            $('.settlements').find(':checkbox').prop('checked', "checked")
+        }
+        UpdateCartGoodsPrice();
+    })
+
+    // 添加商品数量
+    $('.add').click(function () {
+        goods_count = parseInt($(this).next().val())
+        goods_count += 1
+
+        goods_sku_id = $(this).next().attr('goods_sku_id')
+        param = {"goods_sku_id": goods_sku_id, "goods_count": goods_count}
+        $.ajaxSettings.async = false
+        $.post("/u/update-cart", param, function (data) {
+            if (data.code == 0) {
+                err_update = false
+            } else {
+                alert(data.msg);
+                err_update = true
+            }
+        })
+        $.ajaxSettings.async = true
+        if (!err_update) {
+            $(this).next().val(goods_count)
+            // 计算小计
+            goods_price = parseFloat($(this).parents('ul').children('.col05').text())
+            $(this).parents('ul').children('.col07').text((goods_price * goods_count).toFixed(2) + '元')
+        }
+        is_checked = $(this).parents('ul').find(':checkbox').prop('checked')
+        if (is_checked) {
+            UpdateCartGoodsPrice()
+        }
+    });
+
+    // 减少商品数量
+    $('.minus').click(function () {
+        goods_count = parseInt($(this).prev().val())
+        goods_count -= 1
+        if (1 > goods_count) {
+            goods_count = 1
+            $(this).prev().val(goods_count)
+            return
+        }
+
+        goods_sku_id = $(this).prev().attr('goods_sku_id')
+        param = {"goods_sku_id": goods_sku_id, "goods_count": goods_count}
+        $.ajaxSettings.async = false
+        $.post("/u/update-cart", param, function(data){
+            if (data.code == 0) {
+                err_update = false
+            } else {
+                err_update = true
+                alert(data.msg)
+            }
+        })
+        $.ajaxSettings.async = true
+        if (!err_update){
+            $(this).prev().val(goods_count)
+            // 计算小计
+            goods_price = parseFloat($(this).parents('ul').children('.col05').text())  // 商品单价
+
+            $(this).parents('ul').children('.col07').text((goods_price * goods_count).toFixed(2) + '元')
+        }
+        is_checked = $(this).parents('ul').find(':checkbox').prop('checked')
+        if (is_checked){
+            UpdateCartGoodsPrice()
+        }
+    })
+
+
+</script>
 </body>
 </html>
