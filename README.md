@@ -24,7 +24,7 @@
 
 ### 主体模块及实现功能
 
-具体请点击这里查看：[鲜淘驿站-数据库设计](https://github.com/lpg-it/xian-tao/blob/master/doc/鲜淘驿站-主体模块及实现功能.md)
+具体请点击这里查看：[鲜淘驿站-主体模块及实现功能](https://github.com/lpg-it/xian-tao/blob/master/doc/鲜淘驿站-主体模块及实现功能.md)
 
 ### SKU与SPU概念
 
