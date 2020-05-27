@@ -16,7 +16,7 @@ type CartController struct {
 // 获取购物车数量
 func GetCartGoodsCount(this *beego.Controller) int {
 	userName := this.GetSession("userName")
-	if userName == nil{
+	if userName == nil {
 		return 0
 	}
 	o := orm.NewOrm()
@@ -142,7 +142,7 @@ func (this *CartController) ShowCart() {
 }
 
 // 更新购物车数量
-func (this *CartController) HandleUpdateCart(){
+func (this *CartController) HandleUpdateCart() {
 	// 获取数据
 	goodsSKUId, err1 := this.GetInt("goods_sku_id")
 	goodsCount, err2 := this.GetInt("goods_count")
@@ -170,12 +170,43 @@ func (this *CartController) HandleUpdateCart(){
 		this.Data["json"] = resp
 		return
 	}
-	conn.Do("hset", "cart_" + strconv.Itoa(user.Id), goodsSKUId, goodsCount)
+	conn.Do("hset", "cart_"+strconv.Itoa(user.Id), goodsSKUId, goodsCount)
 	resp["code"] = 0
 	resp["msg"] = "ok"
 	this.Data["json"] = resp
+}
 
-	this.Data["title"] = "鲜淘驿站 - 购物车"
+// 删除购物车商品
+func (this *CartController) HandleDeleteCart() {
+	goodsSKUId, err := this.GetInt("goods_sku_id")
+	resp := make(map[string]interface{})
+	defer this.ServeJSON()
 
+	if err != nil {
+		resp["code"] = 1
+		resp["msg"] = "获取商品信息失败"
+		this.Data["json"] = resp
+		return
+	}
 
+	userName := GetUser(&this.Controller)
+	o := orm.NewOrm()
+	var user models.User
+	user.Name = userName
+	o.Read(&user, "Name")
+
+	conn, err := redis.Dial("tcp", ":6379")
+	defer conn.Close()
+	if err != nil {
+		resp["code"] = 2
+		resp["msg"] = "redis数据库连接失败"
+		this.Data["json"] = resp
+		return
+	}
+	conn.Do("hdel", "cart_"+strconv.Itoa(user.Id), goodsSKUId)
+
+	resp["code"] = 0
+	resp["msg"] = "ok"
+
+	this.Data["json"] = resp
 }
