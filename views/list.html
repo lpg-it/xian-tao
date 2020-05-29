@@ -7,7 +7,7 @@
 {{ template "common/navbar_con.html" .goodsTypes}}
 
 <div class="breadcrumb">
-    <a href="#">全部分类</a>
+    <a href="/">全部分类</a>
     <span>></span>
     <a href="/goods-list?type-id={{ .goodsType.Id }}">{{ .goodsType.Name }}</a>
 </div>
@@ -43,7 +43,7 @@
                     <div class="operate">
                         <span class="prize">￥{{ .Price }}</span>
                         <span class="unit">{{ .Price }}/{{ .Unite }}</span>
-                        <a href="#" class="add_goods" title="加入购物车"></a>
+                        <a href="javascript:;" class="add_goods" title="加入购物车" goods_sku_id="{{ .Id }}"></a>
                     </div>
                 </li>
             {{ end }}
@@ -58,8 +58,8 @@
                     <a href="/goods-list?type-id={{ $.goodsTypeId }}&page-index={{ $value }}&sort={{ $.sortType }}"
                        class="active">{{ $value }}</a>
                 {{ else }}
-                    <a href="/goods-list?type-id={{ $.goodsTypeId }}&page-index={{ $value }}">{{ $value }}
-                        &sort={{ $.sortType }}</a>
+                    <a href="/goods-list?type-id={{ $.goodsTypeId }}&page-index={{ $value }}&sort={{ $.sortType }}">{{ $value }}
+                    </a>
                 {{ end }}
             {{ end }}
             <a href="/goods-list?type-id={{ $.goodsTypeId }}&page-index={{ $.nextPageIndex }}&sort={{ .sortType }}">下一页></a>
@@ -68,6 +68,28 @@
 </div>
 
 {{ template "common/footer.html"}}
+<script type="text/javascript">
 
+    $('.add_goods').click(function () {
+        goods_sku_id = $('.add_goods').attr('goods_sku_id')
+        goods_count = 1
+
+        param = {"goods_sku_id": goods_sku_id, "goods_count": goods_count}
+        $.post('/u/add-cart', param, function (data) {
+            if (data.code == 0) {
+                $('.goods_count').html(data.goodsSKUCount);
+            } else {
+                if (data.userName != ""){
+                    // 已登录
+                    alert(data.msg);
+                } else {
+                    // 未登录
+                    alert("未登录，请登录~");
+                    window.location.href = '/login';
+                }
+            }
+        })
+    })
+</script>
 </body>
 </html>

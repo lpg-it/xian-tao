@@ -13,32 +13,36 @@
     <li class="col05">小计</li>
     <li class="col06">操作</li>
 </ul>
+<form action="/u/order" method="post">
+    {{ range .goodsSKUs }}
+        <ul class="cart_list_td clearfix">
+            <li class="col01"><input type="checkbox" name="goods_sku_id" checked value="{{ .goodsSKU.Id }}"></li>
+            <li class="col02"><img src="http://192.168.181.130:8888/{{ .goodsSKU.Image }}"></li>
+            <li class="col03">{{ .goodsSKU.Name }}<br><em>{{ .goodsSKU.Price }}元/{{ .goodsSKU.Unite }}</em></li>
+            <li class="col04">{{ .goodsSKU.Unite }}</li>
+            <li class="col05">{{ .goodsSKU.Price }}元</li>
+            <li class="col06">
+                <div class="num_add">
+                    <a href="javascript:;" class="add fl">+</a>
+                    <input type="text" class="num_show fl" goods_sku_id="{{ .goodsSKU.Id }}" value="{{ .goodsCount }}">
+                    <a href="javascript:;" class="minus fl">-</a>
+                </div>
+            </li>
+            <li class="col07">{{ .goodsTotalPrice }}元</li>
+            <li class="col08"><a href="javascript:;" class="delete_cart_goods" goods_sku_id="{{ .goodsSKU.Id }}">删除</a>
+            </li>
+        </ul>
+    {{ end }}
 
-{{ range .goodsSKUs }}
-    <ul class="cart_list_td clearfix">
-        <li class="col01"><input type="checkbox" name="" checked></li>
-        <li class="col02"><img src="http://192.168.181.130:8888/{{ .goodsSKU.Image }}"></li>
-        <li class="col03">{{ .goodsSKU.Name }}<br><em>{{ .goodsSKU.Price }}元/{{ .goodsSKU.Unite }}</em></li>
-        <li class="col04">{{ .goodsSKU.Unite }}</li>
-        <li class="col05">{{ .goodsSKU.Price }}元</li>
-        <li class="col06">
-            <div class="num_add">
-                <a href="javascript:;" class="add fl">+</a>
-                <input type="text" class="num_show fl" goods_sku_id="{{ .goodsSKU.Id }}" value="{{ .goodsCount }}">
-                <a href="javascript:;" class="minus fl">-</a>
-            </div>
-        </li>
-        <li class="col07">{{ .goodsTotalPrice }}元</li>
-        <li class="col08"><a href="javascript:;" class="delete_cart_goods" goods_sku_id="{{ .goodsSKU.Id }}">删除</a></li>
+    <ul class="settlements">
+        <li class="col01"><input type="checkbox" name="" checked=""></li>
+        <li class="col02">全选</li>
+        <li class="col03">合计(不含运费)：<span>¥</span><em>{{ .allGoodsPrice }}</em><br>共计<b>{{ .allGoodsCount }}</b>件商品</li>
+        <li class="col04"><input type="submit" value="去结算"></li>
     </ul>
-{{ end }}
 
-<ul class="settlements">
-    <li class="col01"><input type="checkbox" name="" checked=""></li>
-    <li class="col02">全选</li>
-    <li class="col03">合计(不含运费)：<span>¥</span><em>{{ .allGoodsPrice }}</em><br>共计<b>{{ .allGoodsCount }}</b>件商品</li>
-    <li class="col04"><a href="place_order.html">去结算</a></li>
-</ul>
+</form>
+
 
 {{ template "common/footer.html"}}
 <script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>

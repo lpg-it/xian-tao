@@ -109,8 +109,8 @@ func (this *CartController) ShowCart() {
 	goodsSKUs := make([]map[string]interface{}, len(cartGoods))
 	i := 0
 
-	allGoodsPrice := 0
-	allGoodsCount := 0
+	allGoodsPrice := 0 // 总金额
+	allGoodsCount := 0 // 总件数
 
 	for index, value := range cartGoods { // index: 商品id，value：商品数量
 		goodsSKUId, _ := strconv.Atoi(index)
@@ -118,9 +118,9 @@ func (this *CartController) ShowCart() {
 		goodsSKU.Id = goodsSKUId
 		o.Read(&goodsSKU)
 
-		goodsInfo := make(map[string]interface{})
-		goodsInfo["goodsSKU"] = goodsSKU
-		goodsInfo["goodsCount"] = value
+		goodsData := make(map[string]interface{})
+		goodsData["goodsSKU"] = goodsSKU
+		goodsData["goodsCount"] = value
 
 		// 所有商品的总价
 		allGoodsPrice += goodsSKU.Price * value
@@ -128,9 +128,9 @@ func (this *CartController) ShowCart() {
 		allGoodsCount += value
 
 		// 单个商品的总价（商品单价 * 商品数量）
-		goodsInfo["goodsTotalPrice"] = goodsSKU.Price * value
+		goodsData["goodsTotalPrice"] = goodsSKU.Price * value
 
-		goodsSKUs[i] = goodsInfo
+		goodsSKUs[i] = goodsData
 		i += 1
 	}
 	this.Data["allGoodsPrice"] = allGoodsPrice

@@ -7,82 +7,52 @@
     <div class="left_menu_con clearfix">
         <h3>用户中心</h3>
         <ul>
-            <li><a href="/u/info">· 个人信息</a></li>
-            <li><a href="/u/order" class="active">· 全部订单</a></li>
-            <li><a href="/u/address">· 收货地址</a></li>
+            <li><a href="/u/user-info">· 个人信息</a></li>
+            <li><a href="/u/user-order" class="active">· 全部订单</a></li>
+            <li><a href="/u/user-address">· 收货地址</a></li>
         </ul>
     </div>
     <div class="right_content clearfix">
         <h3 class="common_title2">全部订单</h3>
+{{ range .goodsBuffer }}
         <ul class="order_list_th w978 clearfix">
-            <li class="col01">2016-8-21 17:36:24</li>
-            <li class="col02">订单号：56872934</li>
-            <li class="col02 stress">未支付</li>
+            <li class="col01">{{ .orderInfo.Time }}</li>
+            <li class="col02">订单号：{{ .orderInfo.OrderId }}</li>
+            <li class="col02 stress">{{ if compare .orderInfo.OrderStatus 1 }}未支付{{ else }} 已支付{{ end }}</li>
         </ul>
 
         <table class="order_list_table w980">
             <tbody>
             <tr>
                 <td width="55%">
+                    {{ range .orderGoods }}
                     <ul class="order_goods_list clearfix">
-                        <li class="col01"><img src="images/goods02.jpg"></li>
-                        <li class="col02">嘎啦苹果嘎啦苹果<em>11.80元/500g</em></li>
-                        <li class="col03">1</li>
-                        <li class="col04">11.80元</li>
+                        <li class="col01"><img src="http://192.168.181.130:8888/{{ .GoodsSKU.Image }}"></li>
+                        <li class="col02">{{ .GoodsSKU.Name }}<em>{{ .GoodsSKU.Price }}元/{{ .GoodsSKU.Unite }}</em></li>
+                        <li class="col03">{{ .Count}}</li>
+                        <li class="col04">{{ .Price }}元</li>
                     </ul>
-                    <ul class="order_goods_list clearfix">
-                        <li class="col01"><img src="images/goods02.jpg"></li>
-                        <li class="col02">嘎啦苹果嘎啦苹果<em>11.80元/500g</em></li>
-                        <li class="col03">1</li>
-                        <li class="col04">11.80元</li>
-                    </ul>
+                    {{ end }}
                 </td>
-                <td width="15%">33.60元</td>
-                <td width="15%">待付款</td>
-                <td width="15%"><a href="#" class="oper_btn">去付款</a></td>
+                <td width="15%">{{ .orderInfo.TotalPrice }}元</td>
+                <td width="15%">{{ if compare .orderInfo.OrderStatus 1 }}<a href="/u/pay?order-id={{ .orderInfo.OrderId }}&total-price={{ .orderInfo.TotalPrice }}" class="oper_btn">去付款</a>{{ else }} 已支付{{ end }}</td>
             </tr>
             </tbody>
         </table>
-
-        <ul class="order_list_th w978 clearfix">
-            <li class="col01">2016-8-21 17:36:24</li>
-            <li class="col02">订单号：56872934</li>
-            <li class="col02 stress">已支付</li>
-        </ul>
-        <table class="order_list_table w980">
-            <tbody>
-            <tr>
-                <td width="55%">
-                    <ul class="order_goods_list clearfix">
-                        <li class="col01"><img src="images/goods02.jpg"></li>
-                        <li class="col02">嘎啦苹果嘎啦苹果<em>11.80元/500g</em></li>
-                        <li class="col03">1</li>
-                        <li class="col04">11.80元</li>
-                    </ul>
-                    <ul class="order_goods_list clearfix">
-                        <li class="col01"><img src="images/goods02.jpg"></li>
-                        <li class="col02">嘎啦苹果嘎啦苹果<em>11.80元/500g</em></li>
-                        <li class="col03">1</li>
-                        <li class="col04">11.80元</li>
-                    </ul>
-                </td>
-                <td width="15%">33.60元</td>
-                <td width="15%">已付款</td>
-                <td width="15%"><a href="#" class="oper_btn">查看物流</a></td>
-            </tr>
-            </tbody>
-        </table>
-
+{{ end }}
         <div class="pagenation">
-            <a href="#">
+            <a href="/u/user-order?page-index={{ .prePageIndex }}">
                 <上一页
             </a>
-            <a href="#" class="active">1</a>
-            <a href="#">2</a>
-            <a href="#">3</a>
-            <a href="#">4</a>
-            <a href="#">5</a>
-            <a href="#">下一页></a>
+            {{ range $index,$value := .pages }}
+                {{ if compare $.pageIndex $value }}
+                    <a href="/u/user-order?page-index={{ $value }}"
+                       class="active">{{ $value }}</a>
+                {{ else }}
+                    <a href="/u/user-order?&page-index={{ $value }}">{{ $value }}</a>
+                {{ end }}
+            {{ end }}
+            <a href="/u/user-order?page-index={{ $.nextPageIndex }}">下一页></a>
         </div>
     </div>
 </div>

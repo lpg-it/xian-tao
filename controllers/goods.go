@@ -15,7 +15,7 @@ type GoodsController struct {
 }
 
 // 获取全部商品类型
-func GetGoodsType(this *beego.Controller){
+func GetGoodsType(this *beego.Controller) {
 	o := orm.NewOrm()
 	var goodsTypes []models.GoodsType
 	o.QueryTable("GoodsType").All(&goodsTypes)
@@ -26,14 +26,14 @@ func GetGoodsType(this *beego.Controller){
 // 分页控制
 func pageTool(pageCount, pageIndex int) []int {
 	var pages []int
-	if pageCount <= 5 {  // 总页码数小于5，全部都显示
+	if pageCount <= 5 { // 总页码数小于5，全部都显示
 		pages = make([]int, pageCount)
 		for i, _ := range pages {
 			pages[i] = i + 1
 		}
-	} else if pageIndex <= 3 {  // 总页码数大于5，但是当前页码位于前三页
+	} else if pageIndex <= 3 { // 总页码数大于5，但是当前页码位于前三页
 		pages = []int{1, 2, 3, 4, 5}
-	} else if pageIndex >= pageCount - 3 {  // 总页码数大于5，但是当前页码位于后三页
+	} else if pageIndex >= pageCount-3 { // 总页码数大于5，但是当前页码位于后三页
 		pages = []int{pageCount - 4, pageCount - 3, pageCount - 2, pageCount - 1, pageCount}
 	} else {
 		pages = []int{pageIndex - 2, pageIndex - 1, pageIndex, pageIndex + 1, pageIndex + 2}
@@ -141,9 +141,9 @@ func (this *GoodsController) ShowGoodsDetail() {
 		}
 
 		// 把以前相同商品的浏览记录删除
-		conn.Do("lrem", "history_" + strconv.Itoa(user.Id), 0, goodsId)
+		conn.Do("lrem", "history_"+strconv.Itoa(user.Id), 0, goodsId)
 		// 添加新的商品浏览记录
-		conn.Do("lpush", "history_" + strconv.Itoa(user.Id), goodsId)
+		conn.Do("lpush", "history_"+strconv.Itoa(user.Id), goodsId)
 	}
 
 	// 获取购物车商品数量
@@ -181,8 +181,8 @@ func (this *GoodsController) ShowGoodsList() {
 	// 商品分页
 	// 对应类型商品总数量
 	goodsCount, _ := o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id", goodsTypeId).Count()
-	pageSize := 5  // 每一页显示多少个商品
-	pageCount := math.Ceil(float64(int(goodsCount) / pageSize))  // 总共多少页
+	pageSize := 3                                               // 每一页显示多少个商品
+	pageCount := math.Ceil(float64(int(goodsCount) / pageSize)) // 总共多少页
 	pageIndex, err := this.GetInt("page-index")
 	if err != nil {
 		pageIndex = 1
@@ -201,7 +201,7 @@ func (this *GoodsController) ShowGoodsList() {
 	} else if sortType == "sale" {
 		o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id", goodsTypeId).OrderBy("Sales").Limit(pageSize, start).All(&goodsSKUs)
 		this.Data["goodsSKUs"] = goodsSKUs
-	}else {
+	} else {
 		o.QueryTable("GoodsSKU").RelatedSel("GoodsType").Filter("GoodsType__Id", goodsTypeId).Limit(pageSize, start).All(&goodsSKUs)
 		this.Data["goodsSKUs"] = goodsSKUs
 	}
@@ -234,13 +234,18 @@ func (this *GoodsController) ShowGoodsList() {
 }
 
 // 处理 搜索商品 结果
-func (this *GoodsController) HandleGoodsSearch(){
+func (this *GoodsController) HandleGoodsSearch() {
 	GetUser(&this.Controller)
 
 	goodsSearchName := this.GetString("goods_search_name")
 	o := orm.NewOrm()
 	// 获取所有商品类型
 	GetGoodsType(&this.Controller)
+
+	// 新品推荐
+	var newGoodsSKUs []models.GoodsSKU
+	o.QueryTable("GoodsSKU").OrderBy("Time").Limit(2, 0).All(&newGoodsSKUs)
+	this.Data["newGoodsSKUs"] = newGoodsSKUs
 
 	// 展示商品搜索结果数据
 	var goodsSKUs []models.GoodsSKU
@@ -253,10 +258,10 @@ func (this *GoodsController) HandleGoodsSearch(){
 	o.QueryTable("GoodsSKU").Filter("Name__icontains", goodsSearchName).All(&goodsSKUs)
 	this.Data["goodsSKUs"] = goodsSKUs
 
-	// 新品推荐
-	var newGoodsSKUs []models.GoodsSKU
-	o.QueryTable("GoodsSKU").OrderBy("Time").Limit(2, 0).All(&newGoodsSKUs)
-	this.Data["newGoodsSKUs"] = newGoodsSKUs
+	// 获取购物车商品数量
+	goodsSKUCount := GetCartGoodsCount(&this.Controller)
+	this.Data["goodsSKUCount"] = goodsSKUCount
 
+	this.Data["title"] = "鲜淘驿站 - 搜索结果"
 	this.TplName = "search.html"
 }

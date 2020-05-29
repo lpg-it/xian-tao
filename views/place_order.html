@@ -9,22 +9,25 @@
 <div class="common_list_con clearfix">
     <dl>
         <dt>寄送到：</dt>
-        <dd><input type="radio" name="" checked="">北京市 海淀区 东北旺西路8号中关村软件园 （李思 收） 182****7528</dd>
+        {{ range .addrs}}
+            <dd><input type="radio" name="addr" value="{{ .Id }}" {{ if .IsDefault }} checked {{ end }}>{{ .Addr }}
+                （{{ .Receiver }} 收） {{ .Phone }}</dd>
+        {{ end }}
     </dl>
-    <a href="user_center_site.html" class="edit_site">编辑收货地址</a>
+    <a href="/u/address" class="edit_site">编辑收货地址</a>
 
 </div>
 
 <h3 class="common_title">支付方式</h3>
 <div class="common_list_con clearfix">
     <div class="pay_style_con clearfix">
-        <input type="radio" name="pay_style" checked>
+        <input type="radio" name="pay_style" value="1">
         <label class="cash">货到付款</label>
-        <input type="radio" name="pay_style">
+        <input type="radio" name="pay_style" value="2">
         <label class="weixin">微信支付</label>
-        <input type="radio" name="pay_style">
+        <input type="radio" name="pay_style" checked value="3">
         <label class="zhifubao"></label>
-        <input type="radio" name="pay_style">
+        <input type="radio" name="pay_style" value="4">
         <label class="bank">银行卡支付</label>
     </div>
 </div>
@@ -39,53 +42,37 @@
         <li class="col04">数量</li>
         <li class="col05">小计</li>
     </ul>
-    <ul class="goods_list_td clearfix">
-        <li class="col01">1</li>
-        <li class="col02"><img src="images/goods/goods012.jpg"></li>
-        <li class="col03">奇异果</li>
-        <li class="col04">500g</li>
-        <li class="col05">25.80元</li>
-        <li class="col06">1</li>
-        <li class="col07">25.80元</li>
-    </ul>
-    <ul class="goods_list_td clearfix">
-        <li class="col01">2</li>
-        <li class="col02"><img src="images/goods/goods003.jpg"></li>
-        <li class="col03">大兴大棚草莓</li>
-        <li class="col04">500g</li>
-        <li class="col05">16.80元</li>
-        <li class="col06">1</li>
-        <li class="col07">16.80元</li>
-    </ul>
+
+    {{ range $index, $value := .goodsBuffer }}
+        <ul class="goods_list_td clearfix">
+            <li class="col01">{{ $index }}</li>
+            <li class="col02"><img src="http://192.168.181.130:8888/{{ $value.goodsSKU.Image }}"></li>
+            <li class="col03">{{ $value.goodsSKU.Name }}</li>
+            <li class="col04">{{ $value.goodsSKU.Unite }}</li>
+            <li class="col05">{{ $value.goodsSKU.Price }}元</li>
+            <li class="col06">{{ $value.goodsCount }}</li>
+            <li class="col07">{{ $value.goodsTotalPrice }}元</li>
+        </ul>
+    {{ end }}
+
+
 </div>
 
 <h3 class="common_title">总金额结算</h3>
 
 <div class="common_list_con clearfix">
     <div class="settle_con">
-        <div class="total_goods_count">共<em>2</em>件商品，总金额<b>42.60元</b></div>
-        <div class="transit">运费：<b>10元</b></div>
-        <div class="total_pay">实付款：<b>52.60元</b></div>
+        <div class="total_goods_count">共<em>{{ .allGoodsCount }}</em>件商品，总金额<b>{{ .allGoodsPrice }}元</b></div>
+        <div class="transit">运费：<b>{{ .freight }}元</b></div>
+        <div class="total_pay">实付款：<b>{{ .realPrice }}元</b></div>
     </div>
 </div>
 
 <div class="order_submit clearfix">
-    <a href="javascript:;" id="order_btn">提交订单</a>
+    <a href="javascript:;" id="order_btn" goods_sku_ids="{{ .goodsSKUIds }}">提交订单</a>
 </div>
 
-<div class="footer">
-    <div class="foot_link">
-        <a href="#">关于我们</a>
-        <span>|</span>
-        <a href="#">联系我们</a>
-        <span>|</span>
-        <a href="#">招聘人才</a>
-        <span>|</span>
-        <a href="#">友情链接</a>
-    </div>
-    <p>CopyRight © 2016 北京天天生鲜信息技术有限公司 All Rights Reserved</p>
-    <p>电话：010-****888 京ICP备*******8号</p>
-</div>
+{{ template "common/footer.html"}}
 
 <div class="popup_con">
     <div class="popup">
@@ -94,20 +81,49 @@
 
     <div class="mask"></div>
 </div>
-<script type="text/javascript" src="js/jquery-1.12.2.js"></script>
+
+<script type="text/javascript" src="/static/js/jquery-1.12.4.min.js"></script>
 <script type="text/javascript">
     $('#order_btn').click(function () {
-        localStorage.setItem('order_finish', 2);
+        // 地址的id、支付方式的id、商品的id、总价格、运费、实际付款价格
+        addr_id = $('input[name="addr"]:checked').val()
+        if (addr_id == "undefined") {
+            alert("未添加收货地址，请前去添加~");
+            window.location.href = '/u/user-address';
+        }
+        pay_style = $('input[name="pay_style"]:checked').val()
+        goods_sku_ids = $('#order_btn').attr('goods_sku_ids')
 
-        $('.popup_con').fadeIn('fast', function () {
+        total_count = $('.total_goods_count').children('em').text()
+        total_price = $('.total_goods_count').children('b').text()  // 总价（不含运费）
 
-            setTimeout(function () {
-                $('.popup_con').fadeOut('fast', function () {
-                    window.location.href = 'index.html';
+        freight = $('.transit').children('b').text()  // 运费
+        real_price = $('.total_pay').children('b').text()
+
+        param = {
+            "addr_id": addr_id,
+            "pay_style": pay_style,
+            "goods_sku_ids": goods_sku_ids,
+            "total_count": parseInt(total_count),
+            "total_price": parseInt(total_price),
+            "freight": parseInt(freight),
+            "real_price": parseInt(real_price),
+        }
+        $.post("/u/add-order", param, function (data) {
+            if (data.code == 0) {
+                localStorage.setItem('order_finish', 2);
+
+                $('.popup_con').fadeIn('fast', function () {
+                    setTimeout(function () {
+                        $('.popup_con').fadeOut('fast', function () {
+                            window.location.href = '/u/user-order';
+                        });
+                    }, 2000)
                 });
-            }, 3000)
-
-        });
+            } else {
+                alert(data.msg);
+            }
+        })
     });
 </script>
 </body>

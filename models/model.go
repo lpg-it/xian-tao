@@ -68,7 +68,7 @@ type GoodsSKU struct {
 	Stock                int                     `orm:"default(1)"`                  // 商品库存
 	Sales                int                     `orm:"default(0)"`                  // 商品销量
 	Status               int                     `orm:"default(1)"`                  // 商品状态：是否有效，默认有效
-	Time                 time.Time               `orm:"type(datetime);auto_now_add"` // 添加时间
+	Time                 time.Time               `orm:"auto_now_add"` // 添加时间
 	GoodsImage           []*GoodsImage           `orm:"reverse(many)"`               // 商品图片
 	IndexGoodsBanner     []*IndexGoodsBanner     `orm:"reverse(many)"`
 	IndexTypeGoodsBanner []*IndexTypeGoodsBanner `orm:"reverse(many)"`
@@ -120,11 +120,11 @@ type OrderInfo struct {
 	Address      *Address      `orm:"rel(fk)"` // 收货地址
 	PayMethod    int           // 支付方式
 	TotalCount   int           `orm:"default(1)"` // 商品数量
-	TotalPrice   int           // 商品总价
+	TotalPrice   int           // 商品总价（包含运费）
 	TransitPrice int           `orm:"default(0)"`                  // 运费
-	OrderStatus  int           `orm:"default(1)"`                  // 支付状态
+	OrderStatus  int           `orm:"default(1)"`                  // 支付状态: 1未支付， 2支付成功
 	TradeNo      string        `orm:"size(20);default('')"`        // 支付编号
-	Time         time.Time     `orm:"type(datetime);auto_now_add"` // 评论时间
+	Time         time.Time     `orm:"auto_now_add"` // 时间
 	OrderGoods   []*OrderGoods `orm:"reverse(many)"`
 }
 

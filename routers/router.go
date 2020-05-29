@@ -19,11 +19,11 @@ func init() {
 	// 退出登录
 	beego.Router("/u/logout", &controllers.UserController{}, "get:Logout")
 	// 用户中心信息
-	beego.Router("/u/info", &controllers.UserController{}, "get:ShowUserInfo")
+	beego.Router("/u/user-info", &controllers.UserController{}, "get:ShowUserInfo")
 	// 用户中心全部订单
-	beego.Router("/u/order", &controllers.UserController{}, "get:ShowUserOrder")
+	beego.Router("/u/user-order", &controllers.UserController{}, "get:ShowUserOrder")
 	// 用户中心收货地址
-	beego.Router("/u/address", &controllers.UserController{}, "get:ShowUserAddress;post:HandleUserAddress")
+	beego.Router("/u/user-address", &controllers.UserController{}, "get:ShowUserAddress;post:HandleUserAddress")
 	// 商品详情
 	beego.Router("/goods-detail", &controllers.GoodsController{}, "get:ShowGoodsDetail")
 	// 商品列表
@@ -38,6 +38,14 @@ func init() {
 	beego.Router("/u/update-cart", &controllers.CartController{}, "post:HandleUpdateCart")
 	// 删除购物车商品数量
 	beego.Router("/u/delete-cart", &controllers.CartController{}, "post:HandleDeleteCart")
+	// 显示订单页面
+	beego.Router("/u/order", &controllers.OrderController{}, "post:ShowOrder")
+	// 添加订单
+	beego.Router("/u/add-order", &controllers.OrderController{}, "post:HandleAddOrder")
+	// 处理支付
+	beego.Router("/u/pay", &controllers.OrderController{}, "get:HandlePay")
+	// 支付成功
+	beego.Router("/u/pay-ok", &controllers.OrderController{}, "get:HandlePayOk")
 }
 
 var loginFilter = func(ctx *context.Context) {

@@ -8,11 +8,7 @@
     <div class="navbar">
         <h1 class="fl">全部商品分类</h1>
         <ul class="navlist fl">
-            <li><a href="">首页</a></li>
-            <li class="interval">|</li>
-            <li><a href="">手机生鲜</a></li>
-            <li class="interval">|</li>
-            <li><a href="">抽奖</a></li>
+            <li><a href="/">首页</a></li>
         </ul>
     </div>
 </div>
@@ -35,7 +31,7 @@
     </div>
     <div class="adv fl">
         {{ range .indexPromotionBanners }}
-            <a href="#"><img src="http://192.168.181.130:8888/{{ .Image }}"></a>
+            <a href="/"><img src="http://192.168.181.130:8888/{{ .Image }}"></a>
         {{ end }}
     </div>
 </div>
@@ -50,7 +46,7 @@
                     <a href="/goods-detail?id={{ .GoodsSKU.Id }}">{{ .GoodsSKU.Name }}</a>
                 {{ end }}
             </div>
-            <a href="#" class="goods_more fr" id="fruit_more">查看更多 ></a>
+            <a href="/goods-list?type-id={{ .type.Id }}" class="goods_more fr" id="fruit_more">查看更多 ></a>
         </div>
 
         <div class="goods_con clearfix">

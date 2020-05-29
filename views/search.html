@@ -31,16 +31,30 @@
                     <div class="operate">
                         <span class="prize">￥{{ .Price }}</span>
                         <span class="unit">{{ .Price }}/{{ .Unite }}</span>
-                        <a href="#" class="add_goods" title="加入购物车"></a>
+                        <a href="#" class="add_goods" title="加入购物车" goods_sku_id="{{ .Id }}"></a>
                     </div>
                 </li>
             {{ end }}
         </ul>
-
     </div>
 </div>
 
 {{ template "common/footer.html"}}
+<script type="text/javascript">
 
+    $('.add_goods').click(function () {
+        goods_sku_id = $('.add_goods').attr('goods_sku_id')
+        goods_count = 1
+
+        param = {"goods_sku_id": goods_sku_id, "goods_count": goods_count}
+        $.post('/u/add-cart', param, function (data) {
+            if (data.code == 0) {
+                $('.goods_count').html(data.goodsSKUCount);
+            } else {
+                alert(data.msg);
+            }
+        })
+    })
+</script>
 </body>
 </html>

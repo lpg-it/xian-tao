@@ -7,6 +7,7 @@ import (
 	"github.com/astaxie/beego/orm"
 	"github.com/astaxie/beego/utils"
 	"github.com/gomodule/redigo/redis"
+	"math"
 	"regexp"
 	"strconv"
 	"time"
@@ -245,9 +246,65 @@ func (this *UserController) ShowUserInfo() {
 
 // 展示用户中心订单页面
 func (this *UserController) ShowUserOrder() {
+	// 获取数据 用户名、订单信息、订单商品、商品SKU
 	userName := GetUser(&this.Controller)
-	this.Data["userName"] = userName
 
+	o := orm.NewOrm()
+	// 获取用户
+	var user models.User
+	user.Name = userName
+	o.Read(&user, "Name")
+
+	// 获取登录用户所有订单表数据
+	var orderInfos []models.OrderInfo
+	o.QueryTable("OrderInfo").RelatedSel("User").Filter("User__Id", user.Id).All(&orderInfos)
+
+	goodsBuffer := make([]map[string]interface{}, len(orderInfos))
+
+	for index, value := range orderInfos { // value: 每一个订单信息
+		var orderGoods []models.OrderGoods
+		o.QueryTable("OrderGoods").RelatedSel("OrderInfo", "GoodsSKU").Filter("OrderInfo__Id", value.Id).All(&orderGoods)
+
+		goodsData := make(map[string]interface{})
+		goodsData["orderInfo"] = value
+		goodsData["orderGoods"] = orderGoods
+
+		goodsBuffer[index] = goodsData
+	}
+
+	// 订单分页
+	// 订单总数量
+	orderCount := len(orderInfos)
+	pageSize := 5                                               // 每一页显示多少个订单
+	pageCount := math.Ceil(float64(int(orderCount) / pageSize)) // 总共多少页
+	pageIndex, err := this.GetInt("page-index")
+	if err != nil {
+		pageIndex = 1
+	}
+	this.Data["pageIndex"] = pageIndex
+
+	start := (pageIndex - 1) * pageSize
+	this.Data["goodsBuffer"] = goodsBuffer[start: start + pageSize]
+
+	// 显示的页码
+	pages := pageTool(int(pageCount), pageIndex)
+	this.Data["pages"] = pages
+
+	// 上一页
+	prePageIndex := pageIndex - 1
+	if prePageIndex <= 1 {
+		prePageIndex = 1
+	}
+	this.Data["prePageIndex"] = prePageIndex
+
+	// 下一页
+	nextPageIndex := pageIndex + 1
+	if nextPageIndex >= int(pageCount) {
+		nextPageIndex = int(pageCount)
+	}
+	this.Data["nextPageIndex"] = nextPageIndex
+
+	// 返回视图
 	this.Data["title"] = "鲜淘驿站 - 用户中心"
 	this.TplName = "user_center_order.html"
 }
@@ -256,7 +313,6 @@ func (this *UserController) ShowUserOrder() {
 func (this *UserController) ShowUserAddress() {
 	userName := GetUser(&this.Controller)
 	this.Data["userName"] = userName
-
 
 	o := orm.NewOrm()
 	var addr models.Address
@@ -314,5 +370,5 @@ func (this *UserController) HandleUserAddress() {
 	o.Insert(&newUserAddress)
 
 	// 返回视图
-	this.Redirect("/u/address", 302)
+	this.Redirect("/u/user-address", 302)
 }
