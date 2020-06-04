@@ -80,7 +80,7 @@ func (this *UserController) HandleRed() {
 	}
 
 	// 发送激活邮件
-	emailConfig := `{"username":"431592976@qq.com","password":"dqswhbiianuibifj","host":"smtp.qq.com","port":587}`
+	emailConfig := `{"username":"431592976@qq.com","password":"这里写授权码","host":"smtp.qq.com","port":587}`
 	emailConn := utils.NewEMail(emailConfig)
 	emailConn.From = "431592976@qq.com" // 指定发件人的邮箱地址
 	emailConn.To = []string{user.Email} // 指定收件人邮箱地址

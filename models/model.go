@@ -130,7 +130,7 @@ type OrderInfo struct {
 
 func init() {
 	// 注册默认数据库
-	orm.RegisterDataBase("default", "mysql", "root:lpg55813%%@tcp(127.0.0.1:3306)/xian_tao?charset=utf8")
+	orm.RegisterDataBase("default", "mysql", "root:数据库密码%%@tcp(127.0.0.1:3306)/xian_tao?charset=utf8")
 
 	// 注册 model
 	orm.RegisterModel(new(User), new(Address), new(Goods), new(GoodsType), new(GoodsImage), new(GoodsSKU), new(IndexGoodsBanner), new(IndexTypeGoodsBanner), new(IndexPromotionBanner), new(OrderGoods), new(OrderInfo))
