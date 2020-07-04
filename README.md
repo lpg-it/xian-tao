@@ -1,6 +1,6 @@
 # 鲜淘驿站
 
-基于 **B2C** 的鲜淘驿站，Logo已授权。
+基于 **B2C** 的鲜淘驿站。
 
 鲜淘驿站后台管理系统代码请到这里查看：[https://github.com/lpg-it/xian-tao-admin](https://github.com/lpg-it/xian-tao-admin)
 
