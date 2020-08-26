@@ -10,9 +10,8 @@
 
 ### 安装
 
-- 安装FastDFS、nginx：
-- 安装Redis
-- 
+- 安装FastDFS、nginx：[一步步带你用 FastDFS 搭建文件管理系统](https://lpgit.com/p/124)
+- 安装Redis：[Redis 简介与安装](https://lpgit.com/p/116)
 
 ### 技术栈
 
@@ -45,8 +44,6 @@
 ### 数据库表
 
 具体请点击这里查看：[鲜淘驿站-数据库设计](https://github.com/lpg-it/xian-tao/blob/master/doc/鲜淘驿站-数据库设计.md)
-
-
 
 该项目是一个完整的电商项目流程
 
