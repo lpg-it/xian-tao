@@ -10,7 +10,7 @@
 
 ### 安装
 
-- 安装FastDFS、nginx：[一步步带你用 FastDFS 搭建文件管理系统](https://lpgit.com/p/124)
+- 安装FastDFS、nginx：[一步步带你用 FastDFS 搭建文件管理系统](https://lpgit.com/p/119)
 - 安装Redis：[Redis 简介与安装](https://lpgit.com/p/116)
 
 ### 技术栈
